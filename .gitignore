@@ -1,0 +1,16 @@
+# FreeCAD AppImage / extracted runtime (large, fetch on demand)
+tools/FreeCAD.AppImage
+tools/squashfs-root/
+
+# FreeCAD backups
+*.FCStd1
+*.FCBak
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Editor / OS
+.DS_Store
+*.swp
