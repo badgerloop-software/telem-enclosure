@@ -86,12 +86,12 @@ NET_CUTOUT_Z_MIN = PCB_TOP_Z - 1.0      # 12.5
 NET_CUTOUT_Z_MAX = PCB_TOP_Z + 19.0     # 32.5
 NET_CUTOUT_Y_PAD = 1.5
 
-# GPIO header pass-through (small wire slot on Y=INT_W wall above the GPIO)
+# GPIO wire pass-through — right short wall (X=INT_L), below the Pi I/O cutout.
+# Centered on the same Y range as the Pi network port cutout, near the floor.
 GPIO_PASS_W = 18.0
 GPIO_PASS_H = 8.0
-GPIO_PASS_Z = PCB_TOP_Z + 2.0           # 15.5
-# Centered along X over the GPIO header (GPIO occupies Pi_x ~= 7..58 on Pi 4B)
-GPIO_PASS_X_CENTER_INT = PI_X0_INT + 32.5
+GPIO_PASS_Z = 6.0                        # interior Z of slot center (world Z = 8.5 mm)
+GPIO_PASS_Y_CENTER_INT = (PI_NETPORT_Y[0] + PI_NETPORT_Y[1]) / 2.0  # ≈ 28.75 mm
 
 # ---------- Vent slots ----------
 SIDE_VENT_W = 2.0
@@ -131,14 +131,7 @@ QU_MOUNT_PILOT_DEPTH = 8.0
 QU_WALL_X0_INT = 10.0    # 10 mm from left interior wall
 QU_WALL_Z0_INT = 8.0     # 8 mm above interior floor
 
-# Adafruit RTC clip-down post (small platform near GPIO)
-RTC_L = 25.0
-RTC_W = 22.0
-RTC_H = 8.0
-
-RTC_X0_INT = 5.0
-RTC_Y0_INT = INT_W - RTC_W - 5.0
-RTC_PLATFORM_Z = 4.0
+# RTC sits directly on the Pi's GPIO pins — no enclosure platform needed.
 
 # ---------- Lid ----------
 LID_LIP_T = 1.5
@@ -149,19 +142,11 @@ LID_LIP_GAP = 0.3        # clearance between lip and inside walls
 # ---------- Antenna holes on walls ----------
 ANT_HOLE_D = 7.0   # M12 SMA bulkhead size
 
-# 3 LTE holes on the back long wall (Y = EXT_W exterior face)
-# Placed in the left portion of the wall, safely clear of the GPIO pass-through
-# slot (world X ≈ 51.9–69.9 mm) and the vent slots (world Z ≈ 41.5–43.5 mm).
-ANT_LTE_COUNT = 3
-ANT_LTE_BACK_X_START = 8.0    # world X of leftmost hole
-ANT_LTE_BACK_SPACING = 18.0   # spacing along X
-ANT_LTE_BACK_Z_WORLD = FLOOR + 28.0  # world Z = 30.5 mm
-
-# 2 RFD holes on the left short wall (X = 0 exterior face)
-ANT_RFD_COUNT = 2
-ANT_RFD_LEFT_Y_CENTER = EXT_W / 2.0  # centered on wall width
-ANT_RFD_LEFT_SPACING = 18.0
-ANT_RFD_LEFT_Z_WORLD = FLOOR + 28.0  # same height as LTE holes
+# All 5 antenna holes on the left short wall (X = 0 exterior face).
+# 3 LTE (for Quectel) + 2 RFD (for RFD900A), evenly spaced along Y.
+ANT_LEFT_COUNT = 5       # total holes
+ANT_LEFT_SPACING = 14.0  # spacing along Y → Y = 15, 29, 43, 57, 71 mm world
+ANT_LEFT_Z_WORLD = FLOOR + 28.0  # world Z = 30.5 mm
 
 # Lid screw bosses (corners, M2.5 self-tap into body bosses)
 LID_SCREW_INSET = 5.0
@@ -206,18 +191,9 @@ def lid_screw_positions_exterior():
     ]
 
 
-def lte_antenna_wall_positions():
-    """Return [(x_world, z_world)] of the 3 LTE holes on the back long wall."""
-    return [
-        (ANT_LTE_BACK_X_START + i * ANT_LTE_BACK_SPACING, ANT_LTE_BACK_Z_WORLD)
-        for i in range(ANT_LTE_COUNT)
-    ]
-
-
-def rfd_antenna_wall_positions():
-    """Return [(y_world, z_world)] of the 2 RFD holes on the left short wall."""
-    y0 = ANT_RFD_LEFT_Y_CENTER - (ANT_RFD_COUNT - 1) * ANT_RFD_LEFT_SPACING / 2.0
-    return [
-        (y0 + i * ANT_RFD_LEFT_SPACING, ANT_RFD_LEFT_Z_WORLD)
-        for i in range(ANT_RFD_COUNT)
-    ]
+def antenna_left_wall_positions():
+    """Return [(y_world, z_world)] for all 5 antenna holes on the left short wall.
+    First 3 are LTE (Quectel), last 2 are RFD (RFD900A)."""
+    y_center = EXT_W / 2.0
+    y_start = y_center - (ANT_LEFT_COUNT - 1) * ANT_LEFT_SPACING / 2.0
+    return [(y_start + i * ANT_LEFT_SPACING, ANT_LEFT_Z_WORLD) for i in range(ANT_LEFT_COUNT)]

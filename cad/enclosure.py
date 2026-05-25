@@ -135,20 +135,7 @@ def build_body() -> Part.Shape:
                      P.QU_MOUNT_PILOT_D, P.QU_MOUNT_PILOT_DEPTH, dir_=(0, -1, 0))
         body = body.cut(pilot)
 
-    # ---- RTC clip-down platform ----
-    rtc_x = P.WALL + P.RTC_X0_INT
-    rtc_y = P.WALL + P.RTC_Y0_INT
-    rtc_pad = _box(
-        rtc_x, rtc_y, P.FLOOR,
-        P.RTC_L, P.RTC_W, P.RTC_PLATFORM_Z,
-    )
-    body = body.fuse(rtc_pad)
-    # Two small posts to keep the RTC PCB pinned (hand-press fit)
-    for cx, cy in [
-        (rtc_x + 2.0, rtc_y + P.RTC_W / 2.0),
-        (rtc_x + P.RTC_L - 2.0, rtc_y + P.RTC_W / 2.0),
-    ]:
-        body = body.fuse(_cyl(cx, cy, P.FLOOR + P.RTC_PLATFORM_Z, 2.5, 4.0))
+    # RTC mounts directly on Pi GPIO pins — no enclosure platform.
 
     # ---- Pi I/O cutout: media long edge on Y=0 wall ----
     media_z_min = P.FLOOR + P.MEDIA_CUTOUT_Z_MIN
@@ -182,15 +169,16 @@ def build_body() -> Part.Shape:
     )
     body = body.cut(net_cutout)
 
-    # ---- GPIO wire pass-through on Y=INT_W wall ----
-    gpio_x_world = P.WALL + P.GPIO_PASS_X_CENTER_INT
+    # ---- GPIO wire pass-through on X=INT_L wall (right short wall) ----
+    # Sits below the Pi network/USB cutout, centered on the same Y span.
+    gpio_y_world = P.WALL + P.GPIO_PASS_Y_CENTER_INT
     gpio_z_world = P.FLOOR + P.GPIO_PASS_Z
     gpio_cutout = _slot(
-        gpio_x_world,
-        P.WALL + P.INT_W + P.WALL / 2.0,  # centered through the back wall
+        P.WALL + P.INT_L + P.WALL / 2.0,  # centered through the right wall
+        gpio_y_world,
         gpio_z_world,
-        P.GPIO_PASS_W,
         P.WALL + 2 * P.EPS,
+        P.GPIO_PASS_W,
         P.GPIO_PASS_H,
     )
     body = body.cut(gpio_cutout)
@@ -211,14 +199,9 @@ def build_body() -> Part.Shape:
             )
             body = body.cut(slot)
 
-    # ---- LTE antenna holes through back long wall (Y = EXT_W face) ----
-    for ax_w, az_w in P.lte_antenna_wall_positions():
-        hole = _cyl(ax_w, P.EXT_W - P.WALL - P.EPS, az_w,
-                    P.ANT_HOLE_D, P.WALL + 2 * P.EPS, dir_=(0, 1, 0))
-        body = body.cut(hole)
-
-    # ---- RFD900A antenna holes through left short wall (X = 0 face) ----
-    for ay_w, az_w in P.rfd_antenna_wall_positions():
+    # ---- All 5 antenna holes on left short wall (X = 0 exterior face) ----
+    # First 3 = LTE (Quectel), last 2 = RFD (RFD900A)
+    for ay_w, az_w in P.antenna_left_wall_positions():
         hole = _cyl(-P.EPS, ay_w, az_w,
                     P.ANT_HOLE_D, P.WALL + 2 * P.EPS, dir_=(1, 0, 0))
         body = body.cut(hole)
@@ -323,11 +306,7 @@ def reference_bricks():
     # Adapter: L along X, W along Z, H extends inward (-Y direction)
     yield ("Quectel_EG25-G", _box(qu_x, qu_pcb_y - P.QU_H, qu_z, P.QU_L, P.QU_H, P.QU_W))
 
-    # Adafruit RTC stack
-    rtc_x = P.WALL + P.RTC_X0_INT
-    rtc_y = P.WALL + P.RTC_Y0_INT
-    rtc_z = P.FLOOR + P.RTC_PLATFORM_Z
-    yield ("Adafruit_RTC", _box(rtc_x, rtc_y, rtc_z, P.RTC_L, P.RTC_W, P.RTC_H))
+    # Adafruit RTC mounts on Pi GPIO pins — no separate reference brick.
 
 
 # ----------------------------------------------------------------------------
@@ -357,9 +336,9 @@ def clearance_report(body_shape):
         print("WARNING: Quectel taller than interior. Increase INT_H.")
     rfd_wall_top_z = P.FLOOR + 10.0 + P.RFD_L
     print(f"RFD900A on left wall top Z: {rfd_wall_top_z:.1f} mm (adhesive, no structural feature)")
-    print(f"LTE antenna holes (back wall): {P.lte_antenna_wall_positions()}")
-    print(f"RFD antenna holes (left wall): {P.rfd_antenna_wall_positions()}")
-    print(f"Antenna holes: {P.ANT_LTE_COUNT} LTE on back wall + {P.ANT_RFD_COUNT} RFD on left wall")
+    ant = P.antenna_left_wall_positions()
+    print(f"Antenna holes on left wall ({len(ant)} total): {ant}")
+    print(f"  First 3 = LTE (Quectel), last 2 = RFD (RFD900A)")
     print("=======================\n")
 
 
