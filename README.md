@@ -1,13 +1,15 @@
 # Compact Telemetry Enclosure
 
+![Enclosure turntable preview](exports/enclosure_preview.gif)
+
 3D-printable enclosure for a compact airborne / ground-station telemetry stack:
 
 | Component | Notes |
 |-----------|-------|
 | Raspberry Pi 4B | Bottom layer, M2.5 standoffs |
 | RFD900A telemetry radio | Adhesive-mounted to left interior wall |
-| Quectel EG25-G LTE module | On upper shelf, 4× M3 screws via Mini PCIe adapter |
-| Adafruit DS3231 RTC | Clip-down platform near GPIO header |
+| Quectel EG25-G LTE module | 4× M3 wall-boss screws via Mini PCIe-to-USB adapter |
+| Adafruit DS3231 RTC | Sits directly on Pi GPIO pins (no separate mount) |
 
 External dimensions: **116 × 86 × 60.5 mm** (L × W × H, body + lid)  
 Printable in PLA or PETG, no supports required except for I/O wall cutouts.
@@ -17,17 +19,21 @@ Printable in PLA or PETG, no supports required except for I/O wall cutouts.
 ## Repository layout
 
 ```
-README.md               ← you are here
+README.md                        ← you are here
+telem-enclosure-components.pdf   ← component datasheets / spec reference
 cad/
   params.py             ← all dimensions as named constants
   enclosure.py          ← FreeCAD Python build script
+  render_gif.py         ← turntable GIF renderer (needs tools/render-venv)
   README.md             ← detailed design notes, print settings, clearance table
 exports/
   enclosure_body.step / .stl
   enclosure_lid.step   / .stl
+  enclosure_preview.gif            ← turntable animation (regenerate with render_gif.py)
   telem_enclosure_assembly.FCStd   (body + lid + reference bricks in FreeCAD)
 tools/
   freecad-mcp/          ← contextform/freecad-mcp bridge for Cursor MCP
+  render-venv/          ← gitignored Python venv for render_gif.py
   FreeCAD.AppImage      ← gitignored (download separately, see below)
   squashfs-root/        ← gitignored (extracted AppImage runtime)
 .cursor/

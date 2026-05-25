@@ -2,6 +2,9 @@
 tools/FreeCAD.AppImage
 tools/squashfs-root/
 
+# Render venv (recreate with: python3 -m venv tools/render-venv && tools/render-venv/bin/pip install matplotlib numpy Pillow numpy-stl)
+tools/render-venv/
+
 # FreeCAD backups
 *.FCStd1
 *.FCBak
