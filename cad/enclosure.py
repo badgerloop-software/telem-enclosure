@@ -199,12 +199,18 @@ def build_body() -> Part.Shape:
             )
             body = body.cut(slot)
 
-    # ---- All 5 antenna holes on left short wall (X = 0 exterior face) ----
-    # First 3 = LTE (Quectel), last 2 = RFD (RFD900A)
-    for ay_w, az_w in P.antenna_left_wall_positions():
-        hole = _cyl(-P.EPS, ay_w, az_w,
-                    P.ANT_HOLE_D, P.WALL + 2 * P.EPS, dir_=(1, 0, 0))
-        body = body.cut(hole)
+    # ---- Left short wall (X = 0): 3 LTE + 2 RFD SMA holes + 1 CAN port ----
+    # LTE — vertical stack, near back edge
+    for ay_w, az_w in P.lte_left_wall_positions():
+        body = body.cut(_cyl(-P.EPS, ay_w, az_w,
+                             P.ANT_HOLE_D, P.WALL + 2 * P.EPS, dir_=(1, 0, 0)))
+    # RFD900A — vertical stack, 20 mm apart, near front edge
+    for ay_w, az_w in P.rfd_left_wall_positions():
+        body = body.cut(_cyl(-P.EPS, ay_w, az_w,
+                             P.ANT_HOLE_D, P.WALL + 2 * P.EPS, dir_=(1, 0, 0)))
+    # CAN port — larger hole in the centre of the wall
+    body = body.cut(_cyl(-P.EPS, P.CAN_HOLE_Y_WORLD, P.CAN_HOLE_Z_WORLD,
+                         P.CAN_HOLE_D, P.WALL + 2 * P.EPS, dir_=(1, 0, 0)))
 
     # ---- Chamfer outer bottom edge for printability/feel (1 mm) ----
     try:
@@ -336,9 +342,9 @@ def clearance_report(body_shape):
         print("WARNING: Quectel taller than interior. Increase INT_H.")
     rfd_wall_top_z = P.FLOOR + 10.0 + P.RFD_L
     print(f"RFD900A on left wall top Z: {rfd_wall_top_z:.1f} mm (adhesive, no structural feature)")
-    ant = P.antenna_left_wall_positions()
-    print(f"Antenna holes on left wall ({len(ant)} total): {ant}")
-    print(f"  First 3 = LTE (Quectel), last 2 = RFD (RFD900A)")
+    print(f"LTE holes (left wall, back corner): {P.lte_left_wall_positions()}")
+    print(f"RFD holes (left wall, front corner): {P.rfd_left_wall_positions()}")
+    print(f"CAN hole (left wall, centre): Y={P.CAN_HOLE_Y_WORLD} Z={P.CAN_HOLE_Z_WORLD:.2f} D={P.CAN_HOLE_D}mm")
     print("=======================\n")
 
 

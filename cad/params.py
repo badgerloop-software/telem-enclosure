@@ -139,14 +139,32 @@ LID_LIP_DEPTH = 4.0
 LID_LIP_GAP = 0.3        # clearance between lip and inside walls
 # Antenna holes are on the walls (not the lid). The lid is a clean vented plate.
 
-# ---------- Antenna holes on walls ----------
-ANT_HOLE_D = 7.0   # M12 SMA bulkhead size
+# ---------- Left short wall (X = 0 exterior face): antennas + CAN port ----------
+#
+# Layout (looking at the wall from outside, Y runs left→right, Z runs bottom→top):
+#
+#   front edge (Y=0)            centre (Y=43)             back edge (Y=86)
+#   │ RFD ●  Z=38.75            ● CAN  Z=28.75            ● LTE  Z=45  │
+#   │     ●  Z=18.75            D=20mm                    ● LTE  Z=30  │
+#   │                                                      ● LTE  Z=15  │
+#
+ANT_HOLE_D = 7.0          # SMA bulkhead, 7 mm
 
-# All 5 antenna holes on the left short wall (X = 0 exterior face).
-# 3 LTE (for Quectel) + 2 RFD (for RFD900A), evenly spaced along Y.
-ANT_LEFT_COUNT = 5       # total holes
-ANT_LEFT_SPACING = 14.0  # spacing along Y → Y = 15, 29, 43, 57, 71 mm world
-ANT_LEFT_Z_WORLD = FLOOR + 28.0  # world Z = 30.5 mm
+# 3 LTE holes — vertical stack, near back corner (Quectel adapter side)
+ANT_LTE_LEFT_Y_WORLD = EXT_W - 12.0   # 74 mm from front (8.5 mm from back edge)
+ANT_LTE_LEFT_Z_START = 15.0           # world Z of lowest hole
+ANT_LTE_LEFT_Z_SPACING = 15.0         # spacing between holes in Z
+ANT_LTE_COUNT = 3
+
+# 2 RFD holes — vertical stack, near front corner, 20 mm c-c (RFD900A SMA ports)
+ANT_RFD_LEFT_Y_WORLD = 10.0           # 10 mm from front edge
+ANT_RFD_LEFT_Z_SPACING = 20.0         # 20 mm centre-to-centre (user-measured)
+ANT_RFD_COUNT = 2
+
+# CAN port — large hole, centred on the wall
+CAN_HOLE_D = 20.0
+CAN_HOLE_Y_WORLD = EXT_W / 2.0        # 43 mm
+CAN_HOLE_Z_WORLD = BODY_H / 2.0       # 28.75 mm
 
 # Lid screw bosses (corners, M2.5 self-tap into body bosses)
 LID_SCREW_INSET = 5.0
@@ -191,9 +209,18 @@ def lid_screw_positions_exterior():
     ]
 
 
-def antenna_left_wall_positions():
-    """Return [(y_world, z_world)] for all 5 antenna holes on the left short wall.
-    First 3 are LTE (Quectel), last 2 are RFD (RFD900A)."""
-    y_center = EXT_W / 2.0
-    y_start = y_center - (ANT_LEFT_COUNT - 1) * ANT_LEFT_SPACING / 2.0
-    return [(y_start + i * ANT_LEFT_SPACING, ANT_LEFT_Z_WORLD) for i in range(ANT_LEFT_COUNT)]
+def lte_left_wall_positions():
+    """Return [(y_world, z_world)] for the 3 LTE holes (vertical stack, back corner)."""
+    return [
+        (ANT_LTE_LEFT_Y_WORLD, ANT_LTE_LEFT_Z_START + i * ANT_LTE_LEFT_Z_SPACING)
+        for i in range(ANT_LTE_COUNT)
+    ]
+
+
+def rfd_left_wall_positions():
+    """Return [(y_world, z_world)] for the 2 RFD holes (vertical stack, front corner)."""
+    z_center = BODY_H / 2.0
+    return [
+        (ANT_RFD_LEFT_Y_WORLD, z_center - ANT_RFD_LEFT_Z_SPACING / 2.0),
+        (ANT_RFD_LEFT_Y_WORLD, z_center + ANT_RFD_LEFT_Z_SPACING / 2.0),
+    ]
