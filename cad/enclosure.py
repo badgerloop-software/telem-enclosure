@@ -119,33 +119,20 @@ def build_body() -> Part.Shape:
                     P.LID_SCREW_BOSS_HOLE_D, boss_h + 2 * P.EPS)
         body = body.cut(hole)
 
-    # ---- Upper shelf rail — Quectel only ----
-    # The RFD900A has no mounting holes; it is adhesive-mounted (VHB tape) to
-    # the flat interior surface of the left short wall (X=WALL inside face).
-    # No rail is built for it.
-
-    # Rail attached to the Y=INT_W wall (back) for the Quectel.
-    # Rail runs the full adapter length starting at QU_BAY_X0_INT.
-    qu_rail = _box(
-        P.WALL + P.QU_BAY_X0_INT,
-        P.WALL + P.INT_W - P.SHELF_RAIL_W,
-        P.FLOOR + P.SHELF_Z,
-        P.QU_BAY_LENGTH, P.SHELF_RAIL_W, P.SHELF_RAIL_T,
-    )
-    body = body.fuse(qu_rail)
-
-    # Quectel adapter: 4 screw-mount posts at the adapter's hole positions.
-    # Post height = shelf top (SHELF_Z + SHELF_RAIL_T).  The adapter rests on
-    # the post tops and is secured with M3 self-tap screws.
-    shelf_top_z_world = P.FLOOR + P.SHELF_Z + P.SHELF_RAIL_T
-    for ix, iy in P.quectel_hole_positions_interior():
-        ex, ey, _ = _interior_to_exterior(ix, iy, 0)
-        post_h = P.SHELF_Z + P.SHELF_RAIL_T   # rises from interior floor
-        post = _cyl(ex, ey, P.FLOOR, P.QU_MOUNT_POST_OD, post_h)
-        body = body.fuse(post)
-        # M3 pilot hole drilled from the top, 6 mm deep
-        pilot = _cyl(ex, ey, shelf_top_z_world - 6.0,
-                     P.QU_MOUNT_PILOT_D, 6.0 + P.EPS)
+    # ---- Quectel adapter: wall-mount bosses on back wall interior face ----
+    # The adapter PCB sits flat against the back wall, held on 4 standoff
+    # bosses (QU_MOUNT_POST_H = 3 mm) with M3 self-tap screws through the PCB.
+    # Bosses project in the -Y direction from Y = WALL+INT_W.
+    back_wall_y = P.WALL + P.INT_W
+    for ix, iz in P.quectel_wall_hole_positions():
+        ex = P.WALL + ix
+        ez = P.FLOOR + iz
+        boss = _cyl(ex, back_wall_y, ez,
+                    P.QU_MOUNT_POST_OD, P.QU_MOUNT_POST_H, dir_=(0, -1, 0))
+        body = body.fuse(boss)
+        # Pilot drilled inward from the interior face (deeper than the boss)
+        pilot = _cyl(ex, back_wall_y + P.EPS, ez,
+                     P.QU_MOUNT_PILOT_D, P.QU_MOUNT_PILOT_DEPTH, dir_=(0, -1, 0))
         body = body.cut(pilot)
 
     # ---- RTC clip-down platform ----
@@ -224,6 +211,18 @@ def build_body() -> Part.Shape:
             )
             body = body.cut(slot)
 
+    # ---- LTE antenna holes through back long wall (Y = EXT_W face) ----
+    for ax_w, az_w in P.lte_antenna_wall_positions():
+        hole = _cyl(ax_w, P.EXT_W - P.WALL - P.EPS, az_w,
+                    P.ANT_HOLE_D, P.WALL + 2 * P.EPS, dir_=(0, 1, 0))
+        body = body.cut(hole)
+
+    # ---- RFD900A antenna holes through left short wall (X = 0 face) ----
+    for ay_w, az_w in P.rfd_antenna_wall_positions():
+        hole = _cyl(-P.EPS, ay_w, az_w,
+                    P.ANT_HOLE_D, P.WALL + 2 * P.EPS, dir_=(1, 0, 0))
+        body = body.cut(hole)
+
     # ---- Chamfer outer bottom edge for printability/feel (1 mm) ----
     try:
         edges = []
@@ -275,10 +274,7 @@ def build_lid() -> Part.Shape:
     lip = lip_outer.cut(lip_inner)
     lid = plate.fuse(lip)
 
-    # ---- Antenna holes through the plate ----
-    for x, y, _label in P.antenna_hole_positions_exterior():
-        hole = _cyl(x, y, -P.EPS, P.ANT_HOLE_D, P.LID + 2 * P.EPS)
-        lid = lid.cut(hole)
+    # Antenna holes are on the body walls, not the lid.
 
     # ---- Lid screw clearance holes at corners ----
     for sx, sy in P.lid_screw_positions_exterior():
@@ -320,11 +316,12 @@ def reference_bricks():
     rfd_z = P.FLOOR + 10.0  # 10 mm above floor (clear of floor fillet)
     yield ("RFD900A_on_wall", _box(rfd_x, rfd_y, rfd_z, P.RFD_H, P.RFD_W, P.RFD_L))
 
-    # Quectel + USB adapter on the back shelf
-    qu_x = P.WALL + P.QU_BAY_X0_INT
-    qu_y = P.WALL + P.QU_Y0_INT
-    qu_z = P.FLOOR + P.SHELF_Z + P.SHELF_RAIL_T
-    yield ("Quectel_EG25-G", _box(qu_x, qu_y, qu_z, P.QU_L, P.QU_W, P.QU_H))
+    # Quectel + Mini PCIe adapter — back wall, PCB face at Y = back_wall - POST_H
+    qu_pcb_y = P.WALL + P.INT_W - P.QU_MOUNT_POST_H
+    qu_x = P.WALL + P.QU_WALL_X0_INT
+    qu_z = P.FLOOR + P.QU_WALL_Z0_INT
+    # Adapter: L along X, W along Z, H extends inward (-Y direction)
+    yield ("Quectel_EG25-G", _box(qu_x, qu_pcb_y - P.QU_H, qu_z, P.QU_L, P.QU_H, P.QU_W))
 
     # Adafruit RTC stack
     rtc_x = P.WALL + P.RTC_X0_INT
@@ -346,23 +343,23 @@ def clearance_report(body_shape):
     pi_top_z = P.FLOOR + P.PI_Z0_INT + P.PI_PCB_T + P.PI_USBA_H
     print(f"Pi USB-A stack top Z: {pi_top_z:.1f} mm "
           f"(headroom to lid: {cavity_top_z - pi_top_z:.1f} mm)")
-    shelf_bot_z = P.FLOOR + P.SHELF_Z
-    shelf_top_z = shelf_bot_z + P.SHELF_RAIL_T
-    qu_top_z = shelf_top_z + P.QU_H
-    rfd_top_z = shelf_top_z + P.RFD_H
-    print(f"Shelf rail bottom Z: {shelf_bot_z:.1f} mm, "
-          f"Pi USB-A top Z: {pi_top_z:.1f} mm, "
-          f"gap: {shelf_bot_z - pi_top_z:.1f} mm")
-    if shelf_bot_z - pi_top_z < 0:
-        print("WARNING: Pi USB-A stack collides with shelf rails.")
-    rfd_wall_top_z = P.FLOOR + 10.0 + P.RFD_L  # tallest extent when on wall
-    print(f"RFD900A on left wall — top Z: {rfd_wall_top_z:.1f} mm "
-          f"(adhesive mount, no structural feature in model)")
-    print(f"Quectel top Z: {qu_top_z:.1f} mm "
-          f"(headroom: {cavity_top_z - qu_top_z:.1f} mm)")
-    if qu_top_z > cavity_top_z:
+    # Quectel on back wall: spans Z from QU_WALL_Z0_INT to QU_WALL_Z0_INT+QU_W
+    qu_z_top = P.FLOOR + P.QU_WALL_Z0_INT + P.QU_W
+    qu_y_front = P.WALL + P.INT_W - P.QU_MOUNT_POST_H - P.QU_H
+    pi_y_max_world = P.WALL + P.PI_W
+    print(f"Quectel Z span: {P.FLOOR + P.QU_WALL_Z0_INT:.1f}–{qu_z_top:.2f} mm "
+          f"(headroom: {cavity_top_z - qu_z_top:.2f} mm)")
+    print(f"Quectel front face Y: {qu_y_front:.2f} mm, Pi Y edge: {pi_y_max_world:.1f} mm, "
+          f"gap: {qu_y_front - pi_y_max_world:.2f} mm")
+    if qu_y_front < pi_y_max_world:
+        print("WARNING: Quectel front face overlaps Pi PCB in Y — increase INT_W or reduce QU_H.")
+    if qu_z_top > cavity_top_z:
         print("WARNING: Quectel taller than interior. Increase INT_H.")
-    print(f"Antenna hole count: {len(P.antenna_hole_positions_exterior())}")
+    rfd_wall_top_z = P.FLOOR + 10.0 + P.RFD_L
+    print(f"RFD900A on left wall top Z: {rfd_wall_top_z:.1f} mm (adhesive, no structural feature)")
+    print(f"LTE antenna holes (back wall): {P.lte_antenna_wall_positions()}")
+    print(f"RFD antenna holes (left wall): {P.rfd_antenna_wall_positions()}")
+    print(f"Antenna holes: {P.ANT_LTE_COUNT} LTE on back wall + {P.ANT_RFD_COUNT} RFD on left wall")
     print("=======================\n")
 
 

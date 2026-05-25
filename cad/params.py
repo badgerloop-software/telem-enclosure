@@ -103,47 +103,39 @@ LID_VENT_W = 2.0
 LID_VENT_L = 20.0
 LID_VENT_COUNT = 6
 
-# ---------- Components on the upper layer ----------
+# ---------- Components ----------
+# RFD900A — no PCB mounting holes, adhesive (VHB) to interior of left short wall
 RFD_L = 53.0
 RFD_W = 33.0
 RFD_H = 12.0
 
 # Mini PCIe-to-USB adapter (SUPERPLUS, 3.5" x 1.77" x 0.71")
-QU_L = 88.9     # 3.5 inches
-QU_W = 44.96    # 1.77 inches
-QU_H = 18.03    # 0.71 inches
+# Mounted flat against the interior face of the back long wall (Y=INT_W).
+# L runs along X, W runs along Z, H is the depth into the enclosure interior.
+QU_L = 88.9     # 3.5 inches — runs along X
+QU_W = 44.96    # 1.77 inches — runs along Z
+QU_H = 18.03    # 0.71 inches — depth away from wall (into interior)
 
-# Mounting holes: 3.55 mm diameter, M3 self-tap
-# Center from each short (L-end) edge: 3 mm + hole_r = 4.775 mm
-# Center from each long (W-edge) edge: 2 mm + hole_r = 3.775 mm
+# Mounting holes: 3.55 mm dia, M3 self-tap bosses
+# Center from each short (L-end) edge: 3 + hole_r = 4.775 mm  (along X)
+# Center from each long  (W-edge) edge: 2 + hole_r = 3.775 mm  (along Z)
 QU_HOLE_D = 3.55
 QU_HOLE_FROM_L_END = 4.775
 QU_HOLE_FROM_W_EDGE = 3.775
 QU_MOUNT_POST_OD = 7.0
-QU_MOUNT_PILOT_D = 3.1     # M3 self-tap pilot in PETG
+QU_MOUNT_POST_H = 3.0    # standoff height projecting from back wall face
+QU_MOUNT_PILOT_D = 3.1   # M3 self-tap pilot in PETG
+QU_MOUNT_PILOT_DEPTH = 8.0
 
+# Quectel position on back wall (interior coords: left edge X, bottom edge Z)
+QU_WALL_X0_INT = 10.0    # 10 mm from left interior wall
+QU_WALL_Z0_INT = 8.0     # 8 mm above interior floor
+
+# Adafruit RTC clip-down post (small platform near GPIO)
 RTC_L = 25.0
 RTC_W = 22.0
 RTC_H = 8.0
 
-# Upper shelf height.  Only the Quectel bay uses a rail now; the RFD900A
-# has no mounting holes and is adhesive-mounted directly to the interior
-# surface of the left short wall (X=0 inside), so no shelf rail is needed.
-SHELF_Z = 32.0
-SHELF_RAIL_T = 3.0      # rail thickness (Z) — used only by Quectel bay
-SHELF_RAIL_W = 6.0      # rail width (extending from wall inward)
-
-# Quectel bay (back half, near Y=INT_W long wall).
-# Start from the left interior wall so the 88.9 mm adapter fits along X.
-QU_BAY_X0_INT = 5.0                      # 5 mm from left interior wall
-QU_BAY_Y_AT_WALL = INT_W                 # against back long wall
-QU_BAY_DEPTH = QU_W + 1.5               # 46.46
-QU_BAY_LENGTH = QU_L + 1.5              # 90.4
-
-# Y position of the adapter's near (front) edge in interior coords
-QU_Y0_INT = INT_W - QU_W               # 37.04 mm from front
-
-# Adafruit RTC clip-down post (small platform near GPIO)
 RTC_X0_INT = 5.0
 RTC_Y0_INT = INT_W - RTC_W - 5.0
 RTC_PLATFORM_Z = 4.0
@@ -152,16 +144,24 @@ RTC_PLATFORM_Z = 4.0
 LID_LIP_T = 1.5
 LID_LIP_DEPTH = 4.0
 LID_LIP_GAP = 0.3        # clearance between lip and inside walls
+# Antenna holes are on the walls (not the lid). The lid is a clean vented plate.
 
-# Antenna holes on the top of the lid
-ANT_HOLE_D = 7.0
+# ---------- Antenna holes on walls ----------
+ANT_HOLE_D = 7.0   # M12 SMA bulkhead size
+
+# 3 LTE holes on the back long wall (Y = EXT_W exterior face)
+# Placed in the left portion of the wall, safely clear of the GPIO pass-through
+# slot (world X ≈ 51.9–69.9 mm) and the vent slots (world Z ≈ 41.5–43.5 mm).
 ANT_LTE_COUNT = 3
+ANT_LTE_BACK_X_START = 8.0    # world X of leftmost hole
+ANT_LTE_BACK_SPACING = 18.0   # spacing along X
+ANT_LTE_BACK_Z_WORLD = FLOOR + 28.0  # world Z = 30.5 mm
+
+# 2 RFD holes on the left short wall (X = 0 exterior face)
 ANT_RFD_COUNT = 2
-ANT_LTE_SPACING = 16.0
-ANT_RFD_SPACING = 18.0
-ANT_EDGE_OFFSET_X = 14.0     # from short-edge of lid
-ANT_LTE_Y_OFFSET = 18.0      # from front (Y=0) edge of lid
-ANT_RFD_Y_OFFSET = EXT_W - 18.0  # from front edge
+ANT_RFD_LEFT_Y_CENTER = EXT_W / 2.0  # centered on wall width
+ANT_RFD_LEFT_SPACING = 18.0
+ANT_RFD_LEFT_Z_WORLD = FLOOR + 28.0  # same height as LTE holes
 
 # Lid screw bosses (corners, M2.5 self-tap into body bosses)
 LID_SCREW_INSET = 5.0
@@ -173,15 +173,15 @@ LID_SCREW_BOSS_HOLE_D = 2.1   # M2.5 self-tap pilot
 EPS = 0.01                   # boolean cleanup margin
 
 # ---------- Helper: Pi mounting hole positions ----------
-def quectel_hole_positions_interior():
-    """Return [(x, y)] of the four Quectel adapter mounting holes
-    in interior coordinates.  The adapter sits at (QU_BAY_X0_INT, QU_Y0_INT)
-    with L along X and W along Y."""
-    x0 = QU_BAY_X0_INT + QU_HOLE_FROM_L_END
-    x1 = QU_BAY_X0_INT + QU_L - QU_HOLE_FROM_L_END
-    y0 = QU_Y0_INT + QU_HOLE_FROM_W_EDGE
-    y1 = QU_Y0_INT + QU_W - QU_HOLE_FROM_W_EDGE
-    return [(x0, y0), (x1, y0), (x0, y1), (x1, y1)]
+def quectel_wall_hole_positions():
+    """Return [(x_int, z_int)] of the 4 Quectel mounting holes in interior
+    XZ coordinates.  The adapter is on the back (Y=INT_W) wall with its
+    L along X and W along Z."""
+    x0 = QU_WALL_X0_INT + QU_HOLE_FROM_L_END
+    x1 = QU_WALL_X0_INT + QU_L - QU_HOLE_FROM_L_END
+    z0 = QU_WALL_Z0_INT + QU_HOLE_FROM_W_EDGE
+    z1 = QU_WALL_Z0_INT + QU_W - QU_HOLE_FROM_W_EDGE
+    return [(x0, z0), (x1, z0), (x0, z1), (x1, z1)]
 
 
 def pi_hole_positions_interior():
@@ -206,21 +206,18 @@ def lid_screw_positions_exterior():
     ]
 
 
-def antenna_hole_positions_exterior():
-    """Antenna hole centres on the lid (lid lies in body's exterior frame).
+def lte_antenna_wall_positions():
+    """Return [(x_world, z_world)] of the 3 LTE holes on the back long wall."""
+    return [
+        (ANT_LTE_BACK_X_START + i * ANT_LTE_BACK_SPACING, ANT_LTE_BACK_Z_WORLD)
+        for i in range(ANT_LTE_COUNT)
+    ]
 
-    Layout: 3 LTE on the +Y half row, 2 RFD on the -Y half row, both running
-    along the X axis with edge offset ANT_EDGE_OFFSET_X from X=0.
-    """
-    holes = []
-    # LTE row (closer to front long wall, Y=ANT_LTE_Y_OFFSET)
-    lte_total = (ANT_LTE_COUNT - 1) * ANT_LTE_SPACING
-    lte_x0 = (EXT_L - lte_total) / 2.0
-    for i in range(ANT_LTE_COUNT):
-        holes.append((lte_x0 + i * ANT_LTE_SPACING, ANT_LTE_Y_OFFSET, "LTE"))
-    # RFD row (closer to back long wall)
-    rfd_total = (ANT_RFD_COUNT - 1) * ANT_RFD_SPACING
-    rfd_x0 = (EXT_L - rfd_total) / 2.0
-    for i in range(ANT_RFD_COUNT):
-        holes.append((rfd_x0 + i * ANT_RFD_SPACING, ANT_RFD_Y_OFFSET, "RFD"))
-    return holes
+
+def rfd_antenna_wall_positions():
+    """Return [(y_world, z_world)] of the 2 RFD holes on the left short wall."""
+    y0 = ANT_RFD_LEFT_Y_CENTER - (ANT_RFD_COUNT - 1) * ANT_RFD_LEFT_SPACING / 2.0
+    return [
+        (y0 + i * ANT_RFD_LEFT_SPACING, ANT_RFD_LEFT_Z_WORLD)
+        for i in range(ANT_RFD_COUNT)
+    ]
