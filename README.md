@@ -30,8 +30,6 @@ cad/
   analyze_step.py         ← inspect bounding boxes and hole sizes
   render_gif.py           ← turntable GIF (arg: car-1.5 or car-2)
   face_templates.py       ← 1:1 print templates (car-2)
-  face_templates_car15.py ← 1:1 print templates (car-1.5, from STEP geometry)
-  extract_car15_features.py ← extract hole/cutout positions for car-1.5 templates
   enclosure.py / params.py  ← parametric car-2 rebuild script
   README.md               ← design notes and print settings
 exports/
