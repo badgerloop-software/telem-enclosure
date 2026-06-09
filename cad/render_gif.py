@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Render a turntable animated GIF of the enclosure body STL.
-Usage:  tools/render-venv/bin/python cad/render_gif.py
-Output: exports/enclosure_preview.gif
+Render a turntable animated GIF of the enclosure body + lid STL.
+Usage:  tools/render-venv/bin/python cad/render_gif.py [car-1.5|car-2]
+Output: exports/<version>/enclosure_preview.gif
 """
+import argparse
 from pathlib import Path
 import numpy as np
 import matplotlib
@@ -15,7 +16,13 @@ from PIL import Image
 import io
 
 HERE = Path(__file__).resolve().parent
-EXPORTS = HERE.parent / "exports"
+
+parser = argparse.ArgumentParser(description="Render enclosure turntable GIF")
+parser.add_argument("version", nargs="?", default="car-1.5",
+                    choices=["car-1.5", "car-2"],
+                    help="which export folder to render (default: car-1.5)")
+args = parser.parse_args()
+EXPORTS = HERE.parent / "exports" / args.version
 
 # ── Load STL files ──────────────────────────────────────────────────────────
 

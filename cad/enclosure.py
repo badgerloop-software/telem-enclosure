@@ -6,7 +6,7 @@ Run headless from the project root:
 
 Or open FreeCAD GUI -> Macro -> open this file and run.
 
-Outputs into ../exports relative to this file:
+Outputs into ../exports/car-2 relative to this file:
     enclosure_body.FCStd, enclosure_body.step, enclosure_body.stl
     enclosure_lid.FCStd,  enclosure_lid.step,  enclosure_lid.stl
     telem_enclosure_assembly.FCStd  (body + lid + reference component bricks)
@@ -34,7 +34,7 @@ if str(HERE) not in sys.path:
 import params as P  # noqa: E402
 
 
-EXPORT_DIR = HERE.parent / "exports"
+EXPORT_DIR = HERE.parent / "exports" / "car-2"
 EXPORT_DIR.mkdir(parents=True, exist_ok=True)
 
 

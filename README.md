@@ -1,6 +1,6 @@
 # Compact Telemetry Enclosure
 
-![Enclosure turntable preview](exports/enclosure_preview.gif)
+![Car 2 enclosure preview](exports/car-2/enclosure_preview.gif)
 
 3D-printable enclosure for a compact airborne / ground-station telemetry stack:
 
@@ -11,8 +11,12 @@
 | Quectel EG25-G LTE module | 4× M3 wall-boss screws via Mini PCIe-to-USB adapter |
 | Adafruit DS3231 RTC | Sits directly on Pi GPIO pins (no separate mount) |
 
-External dimensions: **116 × 86 × 60.5 mm** (L × W × H, body + lid)  
-Printable in PLA or PETG, no supports required except for I/O wall cutouts.
+| Version | Dimensions (L × W × H) | Source |
+|---------|------------------------|--------|
+| **car-1.5** (active) | 228.6 × 223.5 × 57.2 mm | Recovered SolidWorks 2023 STEP |
+| **car-2** (archived) | 116 × 86 × 60.5 mm | Parametric FreeCAD rebuild |
+
+Printable in PLA or PETG. See [`exports/README.md`](exports/README.md) for file layout.
 
 ---
 
@@ -22,15 +26,18 @@ Printable in PLA or PETG, no supports required except for I/O wall cutouts.
 README.md                        ← you are here
 telem-enclosure-components.pdf   ← component datasheets / spec reference
 cad/
-  params.py             ← all dimensions as named constants
-  enclosure.py          ← FreeCAD Python build script
-  render_gif.py         ← turntable GIF renderer (needs tools/render-venv)
-  README.md             ← detailed design notes, print settings, clearance table
+  import_legacy.py        ← import car-1.5 STEP → exports/car-1.5/
+  analyze_step.py         ← inspect bounding boxes and hole sizes
+  render_gif.py           ← turntable GIF (arg: car-1.5 or car-2)
+  face_templates.py       ← 1:1 print templates (car-2)
+  face_templates_car15.py ← 1:1 print templates (car-1.5, from STEP geometry)
+  extract_car15_features.py ← extract hole/cutout positions for car-1.5 templates
+  enclosure.py / params.py  ← parametric car-2 rebuild script
+  README.md               ← design notes and print settings
 exports/
-  enclosure_body.step / .stl
-  enclosure_lid.step   / .stl
-  enclosure_preview.gif            ← turntable animation (regenerate with render_gif.py)
-  telem_enclosure_assembly.FCStd   (body + lid + reference bricks in FreeCAD)
+  README.md               ← version layout guide
+  car-1.5/                ← recovered SolidWorks design (active)
+  car-2/                  ← parametric compact redesign (archived)
 tools/
   freecad-mcp/          ← contextform/freecad-mcp bridge for Cursor MCP
   render-venv/          ← gitignored Python venv for render_gif.py
@@ -40,7 +47,7 @@ tools/
   mcp.json              ← FreeCAD MCP server config for Cursor
 ```
 
-## Quick start — regenerate the model
+## Quick start — import the recovered model
 
 1. **Get FreeCAD 1.0+** — either via apt or AppImage:
    ```bash
@@ -49,20 +56,26 @@ tools/
    # and place it at tools/FreeCAD.AppImage
    ```
 
-2. **Run the build script:**
+2. **Import the car-1.5 STEP files into `exports/car-1.5/`:**
    ```bash
-   freecadcmd cad/enclosure.py
+   freecadcmd cad/import_legacy.py
    # or, using the local AppImage:
-   echo 'exec(open("cad/enclosure.py").read())' | \
+   echo 'exec(open("cad/import_legacy.py").read())' | \
      ./tools/squashfs-root/usr/bin/freecadcmd
    ```
-   This writes `exports/enclosure_body.{step,stl}`, `exports/enclosure_lid.{step,stl}`,  
-   and `exports/telem_enclosure_assembly.FCStd`, and prints a clearance report.
+   Reads `exports/car-1.5/SoftwareEnclosure*Car1.5.STEP`, aligns the body to
+   origin, and writes `enclosure_body.{FCStd,step,stl}`, `enclosure_lid.*`, and
+   `telem_enclosure_assembly.FCStd` into the same folder.
 
-3. **Tweak dimensions** in [`cad/params.py`](cad/params.py) and re-run step 2.
+3. **Make modifications** in FreeCAD GUI (or via the MCP bridge below), then
+   re-export from FreeCAD or update the source STEP files and re-run step 2.
 
-See [`cad/README.md`](cad/README.md) for full design notes, a component clearance  
-table, mounting hole specs, and print settings.
+4. **Regenerate visuals** after changes:
+   ```bash
+   tools/render-venv/bin/python cad/render_gif.py car-1.5
+   ```
+
+See [`cad/README.md`](cad/README.md) for design notes and print settings.
 
 ## Cursor MCP (drive FreeCAD from chat)
 
@@ -73,8 +86,8 @@ The repo ships a `.cursor/mcp.json` pointing to the bundled `freecad-mcp` bridge
    cd tools/freecad-mcp && python3 -m venv .venv && .venv/bin/pip install mcp
    ```
 2. In Cursor: **Settings → MCP → reload** — a `freecad` server should appear.
-3. Launch FreeCAD GUI, then ask the agent to make changes; it drives FreeCAD live  
-   over the Unix socket while `cad/params.py` remains the source of truth.
+3. Launch FreeCAD GUI, open `exports/car-1.5/enclosure_body.FCStd` or `enclosure_lid.FCStd`,
+   then ask the agent to make changes; it drives FreeCAD live over the Unix socket.
 
 ## Printing
 

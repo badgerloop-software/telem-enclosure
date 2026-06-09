@@ -6,7 +6,7 @@ Print at EXACTLY 100% (disable "fit to page" / "shrink to margins").
 Cut out each face rectangle with scissors, then lay your components on top
 to verify hole positions and cutout sizes before printing the 3D model.
 
-Output:  exports/face_templates.pdf   (5 pages)
+Output:  exports/car-2/face_templates.pdf   (5 pages, car-2 parametric dims)
 Usage:   tools/render-venv/bin/python cad/face_templates.py
 """
 from pathlib import Path
@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Circle, FancyBboxPatch
 from matplotlib.backends.backend_pdf import PdfPages
 
-EXPORTS = HERE.parent / "exports"
+EXPORTS = HERE.parent / "exports" / "car-2"
 
 # ── Page layout (all mm) ─────────────────────────────────────────────────────
 MARGIN_X = 22   # left/right padding around face on page
