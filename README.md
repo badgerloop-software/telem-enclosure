@@ -1,8 +1,8 @@
-# Compact Telemetry Enclosure
+# Telemetry Enclosure
 
 ![Car 2 enclosure preview](exports/car-2/enclosure_preview.gif)
 
-3D-printable enclosure for a compact airborne / ground-station telemetry stack:
+3D-printable enclosure for an airborne / ground-station telemetry stack:
 
 | Component | Notes |
 |-----------|-------|
@@ -11,10 +11,10 @@
 | Quectel EG25-G LTE module | 4× M3 wall-boss screws via Mini PCIe-to-USB adapter |
 | Adafruit DS3231 RTC | Sits directly on Pi GPIO pins (no separate mount) |
 
-| Version | Dimensions (L × W × H) | Source |
-|---------|------------------------|--------|
-| **car-1.5** (active) | 228.6 × 223.5 × 57.2 mm | Recovered SolidWorks 2023 STEP |
-| **car-2** (archived) | 116 × 86 × 60.5 mm | Parametric FreeCAD rebuild |
+| Version | Dimensions (L × W × H) | Role |
+|---------|------------------------|------|
+| **car-2** (active) | 228.6 × 223.5 × 57.2 mm | Working redesign — edit these exports |
+| **car-1.5** (archive) | 228.6 × 223.5 × 57.2 mm | Pristine recovered SolidWorks 2023 STEP baseline |
 
 Printable in PLA or PETG. See [`exports/README.md`](exports/README.md) for file layout.
 
@@ -29,13 +29,13 @@ cad/
   import_legacy.py        ← import car-1.5 STEP → exports/car-1.5/
   analyze_step.py         ← inspect bounding boxes and hole sizes
   render_gif.py           ← turntable GIF (arg: car-1.5 or car-2)
-  face_templates.py       ← 1:1 print templates (car-2)
-  enclosure.py / params.py  ← parametric car-2 rebuild script
+  face_templates.py       ← 1:1 print templates (legacy compact layout)
+  enclosure.py / params.py  ← experimental compact parametric model (not current car-2)
   README.md               ← design notes and print settings
 exports/
   README.md               ← version layout guide
-  car-1.5/                ← recovered SolidWorks design (active)
-  car-2/                  ← parametric compact redesign (archived)
+  car-1.5/                ← recovered SolidWorks archive (do not edit)
+  car-2/                  ← active working folder (legacy-based redesign)
 tools/
   freecad-mcp/          ← contextform/freecad-mcp bridge for Cursor MCP
   render-venv/          ← gitignored Python venv for render_gif.py
@@ -45,7 +45,7 @@ tools/
   mcp.json              ← FreeCAD MCP server config for Cursor
 ```
 
-## Quick start — import the recovered model
+## Quick start
 
 1. **Get FreeCAD 1.0+** — either via apt or AppImage:
    ```bash
@@ -54,23 +54,22 @@ tools/
    # and place it at tools/FreeCAD.AppImage
    ```
 
-2. **Import the car-1.5 STEP files into `exports/car-1.5/`:**
+2. **Regenerate the car-1.5 archive** (only if source STEP files changed):
    ```bash
-   freecadcmd cad/import_legacy.py
-   # or, using the local AppImage:
    echo 'exec(open("cad/import_legacy.py").read())' | \
      ./tools/squashfs-root/usr/bin/freecadcmd
    ```
    Reads `exports/car-1.5/SoftwareEnclosure*Car1.5.STEP`, aligns the body to
    origin, and writes `enclosure_body.{FCStd,step,stl}`, `enclosure_lid.*`, and
-   `telem_enclosure_assembly.FCStd` into the same folder.
+   `telem_enclosure_assembly.FCStd` into `exports/car-1.5/`.
 
-3. **Make modifications** in FreeCAD GUI (or via the MCP bridge below), then
-   re-export from FreeCAD or update the source STEP files and re-run step 2.
+3. **Work in `exports/car-2/`** — the active redesign. Copy fresh exports from
+   `car-1.5/` when resetting, then edit `enclosure_body.{FCStd,step,stl}` (and lid
+   as needed) in FreeCAD GUI or via the MCP bridge below.
 
-4. **Regenerate visuals** after changes:
+4. **Regenerate the README preview GIF** after car-2 changes:
    ```bash
-   tools/render-venv/bin/python cad/render_gif.py car-1.5
+   tools/render-venv/bin/python cad/render_gif.py car-2
    ```
 
 See [`cad/README.md`](cad/README.md) for design notes and print settings.
@@ -84,7 +83,7 @@ The repo ships a `.cursor/mcp.json` pointing to the bundled `freecad-mcp` bridge
    cd tools/freecad-mcp && python3 -m venv .venv && .venv/bin/pip install mcp
    ```
 2. In Cursor: **Settings → MCP → reload** — a `freecad` server should appear.
-3. Launch FreeCAD GUI, open `exports/car-1.5/enclosure_body.FCStd` or `enclosure_lid.FCStd`,
+3. Launch FreeCAD GUI, open `exports/car-2/enclosure_body.FCStd` or `enclosure_lid.FCStd`,
    then ask the agent to make changes; it drives FreeCAD live over the Unix socket.
 
 ## Printing
