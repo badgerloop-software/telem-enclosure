@@ -111,7 +111,7 @@ python3 viewer/server.py
 
 The viewer reloads automatically when `enclosure_body.stl` changes.
 
-## Working with Cursor AI
+## Working with Google Antigravity
 
 Use the viewer and chat together so you can point at geometry by name:
 
@@ -123,15 +123,15 @@ Use the viewer and chat together so you can point at geometry by name:
 For live boolean edits in FreeCAD GUI, use the MCP bridge. For quick visual review and
 face naming, use the web viewer — no FreeCAD window required.
 
-## Cursor MCP (drive FreeCAD from chat)
+## Antigravity MCP (drive FreeCAD from chat)
 
-The repo ships a `.cursor/mcp.json` pointing to the bundled `freecad-mcp` bridge.
+The repo ships a `.cursor/mcp.json` pointing to the bundled `freecad-mcp` bridge. You can add this configuration to your Antigravity setup to use it.
 
 1. Install the Python `mcp` package (already done if you cloned this repo with the venv):
    ```bash
    cd tools/freecad-mcp && python3 -m venv .venv && .venv/bin/pip install mcp
    ```
-2. In Cursor: **Settings → MCP → reload** — a `freecad` server should appear.
+2. In Antigravity: **add the MCP server** — a `freecad` server should appear.
 3. Launch FreeCAD GUI, open `exports/car-2/enclosure_body.FCStd` or `enclosure_lid.FCStd`,
    then ask the agent to make changes; it drives FreeCAD live over the Unix socket.
 

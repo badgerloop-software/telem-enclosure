@@ -40,6 +40,11 @@ def update_assembly(version: str = "car-2") -> None:
     asm.saveAs(str(out))
     App.closeDocument(asm.Name)
     print(f"Wrote {out}")
+    
+    combined = body.fuse(lid_placed)
+    out_stl = export / "telem_enclosure_assembly.stl"
+    combined.exportStl(str(out_stl))
+    print(f"Wrote {out_stl}")
 
 
 def main() -> None:

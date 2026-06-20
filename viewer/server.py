@@ -85,6 +85,14 @@ class ViewerHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
 
+        if path == "/api/selection":
+            global current_selection
+            try:
+                self._send_json(current_selection)
+            except NameError:
+                self._send_json({})
+            return
+
         if path == "/api/files":
             self._send_json({"files": _list_models()})
             return
@@ -130,6 +138,15 @@ class ViewerHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
+        
+        if parsed.path == "/api/selection":
+            length = int(self.headers.get("Content-Length", "0"))
+            data = self.rfile.read(length)
+            global current_selection
+            current_selection = json.loads(data)
+            self._send_json({"ok": True})
+            return
+
         if parsed.path != "/api/save":
             self._send_json({"error": "not found"}, 404)
             return

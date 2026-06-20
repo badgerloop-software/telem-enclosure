@@ -20,6 +20,7 @@ const downloadBtn = document.getElementById("download-btn");
 const showEdgesChk = document.getElementById("show-edges");
 const fitBtn = document.getElementById("fit-btn");
 const clearSelectionBtn = document.getElementById("clear-selection-btn");
+const orientBtn = document.getElementById("orient-btn");
 
 // ── Three.js scene ───────────────────────────────────────────────────────────
 const scene = new THREE.Scene();
@@ -113,6 +114,7 @@ sceneHelpers.add(axesGroup);
 let currentFile = "car-2/enclosure_body.stl";
 let lastMtime = 0;
 let pollTimer = null;
+let skipNextOrient = false;
 
 /** @type {THREE.Mesh | null} */
 let bodyMesh = null;
@@ -502,7 +504,9 @@ function updateSelectionUI(stats, faceIds = []) {
       <dt>Triangles</dt><dd>${stats.triangleCount}</dd>
     </dl>`;
   extrudeBtn.disabled = false;
+  if (orientBtn) orientBtn.disabled = false;
   updateFaceLabels();
+  fetch("/api/selection", { method: "POST", body: JSON.stringify({ faceIds, stats }) }).catch(console.error);
 }
 
 function updateHighlight(geometry, triangles) {
@@ -643,6 +647,7 @@ function clearModel() {
   }
   extrusionMeshes = [];
   clearExtrudeBtn.disabled = true;
+  if (orientBtn) orientBtn.disabled = true;
 
   if (bodyMesh) {
     modelGroup.remove(bodyMesh);
@@ -770,7 +775,13 @@ async function loadModel(file, quiet = false) {
     bodyMesh = new THREE.Mesh(geom, mat);
     modelGroup.add(bodyMesh);
     triangleAdjacency = buildAdjacency(geom);
-    orientModelOnBottom(geom, triangleAdjacency);
+    
+    if (skipNextOrient) {
+      skipNextOrient = false;
+    } else {
+      orientModelOnBottom(geom, triangleAdjacency);
+    }
+    
     updateEdges();
     fitToObject();
 
@@ -787,6 +798,11 @@ function buildExportObject() {
   const group = new THREE.Group();
   if (bodyMesh) group.add(bodyMesh.clone());
   for (const m of extrusionMeshes) group.add(m.clone());
+  
+  group.position.copy(modelGroup.position);
+  group.quaternion.copy(modelGroup.quaternion);
+  group.scale.copy(modelGroup.scale);
+  
   return group;
 }
 
@@ -876,9 +892,38 @@ showEdgesChk.addEventListener("change", updateEdges);
 
 clearSelectionBtn.addEventListener("click", () => {
   selectedTriangles.clear();
-  if (bodyMesh) updateHighlight(bodyMesh.geometry, selectedTriangles);
+  selectedFaceIds.clear();
+  updateHighlight(bodyMesh?.geometry, selectedTriangles);
   updateSelectionUI(null);
 });
+
+if (orientBtn) {
+  orientBtn.addEventListener("click", () => {
+    if (selectedFaceIds.size === 0) return;
+    const faceId = [...selectedFaceIds][0];
+    const face = registeredFaces.get(faceId);
+    if (!face) return;
+    
+    // The normal in the original geometry
+    const normal = face.normal.clone().normalize();
+    const ground = new THREE.Vector3(0, -1, 0);
+    
+    // Rotate modelGroup so the face normal points down
+    if (Math.abs(normal.dot(ground)) < 0.999) {
+      modelGroup.quaternion.setFromUnitVectors(normal, ground);
+    } else {
+      modelGroup.quaternion.identity();
+    }
+    modelGroup.position.set(0, 0, 0);
+    modelGroup.updateMatrixWorld(true);
+    
+    // Now move it so the face center is exactly on the ground (Y = 0)
+    // Actually, usually we want the bottom of the bounding box to be on the ground,
+    // but since this face IS the bottom now, its center's Y is the lowest.
+    const worldCenter = face.center.clone().applyMatrix4(modelGroup.matrixWorld);
+    modelGroup.position.y -= worldCenter.y;
+  });
+}
 
 extrudeBtn.addEventListener("click", () => {
   if (!bodyMesh || !selectedTriangles.size) return;
