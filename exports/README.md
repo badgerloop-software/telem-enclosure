@@ -14,19 +14,29 @@ All generated model files are grouped by vehicle generation.
 
 **Extents:** 228.6 × 223.5 × 57.2 mm (body + lid)
 
-**Current edits:** interior floor smoothed — rectangular cutouts removed, circular Pi
-mounting holes preserved.
+**Current edits:** interior floor smoothed — square pocket cutouts removed, Pi standoff
+bosses and mounting holes filled (flat floor at z = 7.62 mm).
+
+Regenerate after floor edits:
+```bash
+./tools/squashfs-root/usr/bin/freecadcmd cad/smooth_floor.py
+./tools/squashfs-root/usr/bin/freecadcmd cad/update_assembly.py car-2
+tools/render-venv/bin/python cad/render_gif.py car-2
+```
+
+**Web viewer** — inspect STL, assign face numbers for AI chat, save back to disk:
+```bash
+python3 viewer/server.py
+# open http://127.0.0.1:8765 — select faces, reference them as #1, #2, … in Cursor
+```
+Auto-reload picks up STL changes when you re-export from CAD scripts. See root
+[`README.md`](../README.md) for the full viewer + Cursor workflow.
 
 **Reset from archive** (copies pristine car-1.5 exports into car-2):
 ```bash
 cp exports/car-1.5/enclosure_body.{FCStd,step,stl} exports/car-2/
 cp exports/car-1.5/enclosure_lid.{FCStd,step,stl} exports/car-2/
 cp exports/car-1.5/telem_enclosure_assembly.FCStd exports/car-2/
-```
-
-**Regenerate preview GIF:**
-```bash
-tools/render-venv/bin/python cad/render_gif.py car-2
 ```
 
 ## `car-1.5/` — recovered SolidWorks archive (read-only baseline)

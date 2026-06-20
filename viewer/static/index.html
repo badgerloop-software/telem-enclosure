@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Telem Enclosure Viewer</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>Telem Enclosure Viewer</h1>
+      <div class="toolbar">
+        <label>
+          Model
+          <select id="file-select"></select>
+        </label>
+        <button id="reload-btn" title="Reload now">Reload</button>
+        <label class="checkbox">
+          <input type="checkbox" id="auto-reload" checked />
+          Auto-reload
+        </label>
+        <span id="status" class="status">—</span>
+      </div>
+    </header>
+
+    <aside id="sidebar">
+      <section>
+        <h2>Selection</h2>
+        <p class="hint"><strong>Left-click</strong> a flat face to select (like FreeCAD). <strong>Shift+click</strong> to add. <strong>Left-drag</strong> rotates the view. The first time you select a face it gets a <strong>#</strong> — use that when discussing edits.</p>
+        <div id="selection-info" class="info-panel empty">No face selected</div>
+      </section>
+
+      <section>
+        <h2>Extrude</h2>
+        <label>
+          Distance (mm)
+          <input type="number" id="extrude-distance" value="2" step="0.1" min="0.01" />
+        </label>
+        <label>
+          Direction
+          <select id="extrude-direction">
+            <option value="1">Along face normal (outward)</option>
+            <option value="-1">Opposite normal (inward)</option>
+          </select>
+        </label>
+        <button id="extrude-btn" disabled>Extrude selected face</button>
+        <button id="clear-extrude-btn" disabled>Undo last extrusion</button>
+      </section>
+
+      <section>
+        <h2>Save</h2>
+        <p class="hint">Writes binary STL to <code>exports/</code>. Creates a <code>.bak</code> backup first.</p>
+        <button id="save-btn">Save STL to disk</button>
+        <button id="download-btn">Download STL</button>
+      </section>
+
+      <section>
+        <h2>View</h2>
+        <label>
+          <input type="checkbox" id="show-edges" />
+          Show edges
+        </label>
+        <button id="fit-btn">Fit view</button>
+        <button id="clear-selection-btn">Clear selection</button>
+      </section>
+    </aside>
+
+    <main id="viewport"></main>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
