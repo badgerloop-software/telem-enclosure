@@ -249,28 +249,34 @@ def build_smooth_body() -> Part.Shape:
     RADIO_W = 9.5
     RADIO_L = 53.0
     RADIO_H = 33.0
-    RADIO_X_CENTER = 205.0   # Moved right to make room for Pi 4
+    RADIO_X_CENTER = 195.0   # Shifted left 10 mm to expose back-right floor hole at X=214.63
     GUIDE_T = 2.0    # Thickness of the vertical guide walls
-    
+    # Guide walls only cover the back half of the module length so the LED
+    # at the front end remains visible and the antenna connectors are already
+    # exposed by the cutout in the back wall.
+    GUIDE_L = RADIO_L / 2.0   # ~26.5 mm — half the module length
+
     radio_z_bottom = 7.62
     radio_y_back = THIN_WALL_Y     # 99.06
     radio_y_front = radio_y_back - RADIO_L  # 46.06
-    
-    # Left guide wall
+    # Shortened guide walls start at the back wall and only extend half-way
+    radio_guide_y_start = radio_y_back - GUIDE_L
+
+    # Left guide wall (back half only)
     left_guide = Part.makeBox(
         GUIDE_T,
-        RADIO_L,
+        GUIDE_L,
         RADIO_H,
-        App.Vector(RADIO_X_CENTER - RADIO_W/2 - GUIDE_T, radio_y_front, radio_z_bottom)
+        App.Vector(RADIO_X_CENTER - RADIO_W/2 - GUIDE_T, radio_guide_y_start, radio_z_bottom)
     )
     body = body.fuse(left_guide)
-    
-    # Right guide wall
+
+    # Right guide wall (back half only)
     right_guide = Part.makeBox(
         GUIDE_T,
-        RADIO_L,
+        GUIDE_L,
         RADIO_H,
-        App.Vector(RADIO_X_CENTER + RADIO_W/2, radio_y_front, radio_z_bottom)
+        App.Vector(RADIO_X_CENTER + RADIO_W/2, radio_guide_y_start, radio_z_bottom)
     )
     body = body.fuse(right_guide)
     
