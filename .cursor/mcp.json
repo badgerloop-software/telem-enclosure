@@ -1,9 +1,9 @@
 {
   "mcpServers": {
     "freecad": {
-      "command": "/home/sbasu/Documents/telem-enclosure/tools/freecad-mcp/.venv/bin/python",
+      "command": "/telem-enclosure/tools/freecad-mcp/.venv/bin/python",
       "args": [
-        "/home/sbasu/Documents/telem-enclosure/tools/freecad-mcp/working_bridge.py"
+        "/telem-enclosure/tools/freecad-mcp/working_bridge.py"
       ],
       "env": {
         "PYTHONUNBUFFERED": "1"
