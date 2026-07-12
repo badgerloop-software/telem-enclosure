@@ -34,6 +34,14 @@ def load_stl(path: Path):
 body_verts, body_norms = load_stl(EXPORTS / "enclosure_body.stl")
 lid_verts,  lid_norms  = load_stl(EXPORTS / "enclosure_lid.stl")
 
+if args.version == "car-2":
+    # car-2 files are Y-up. Revert to Z-up (+90 deg X rot) for matplotlib
+    for verts in [body_verts, lid_verts]:
+        y_tmp = verts[:, :, 1].copy()
+        z_tmp = verts[:, :, 2].copy()
+        verts[:, :, 1] = -z_tmp
+        verts[:, :, 2] = y_tmp
+
 # Centre both meshes on their combined bounding box
 all_pts = np.vstack([body_verts.reshape(-1, 3), lid_verts.reshape(-1, 3)])
 centre  = (all_pts.max(axis=0) + all_pts.min(axis=0)) / 2

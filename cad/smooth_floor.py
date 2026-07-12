@@ -120,7 +120,8 @@ def build_smooth_body() -> Part.Shape:
     
     # c) Translate to Face 2 center (X=61.12, base at Y=98.60)
     # Shifted left by 10mm to avoid the floor hole at X=13.97
-    bosses.translate(App.Vector(61.12, 98.60, 0))
+    # Shifted up by 5mm for ground clearance
+    bosses.translate(App.Vector(61.12, 98.60, 5.0))
     
     # 5. (Bosses will be fused later, after the back wall is hollowed out)
 
@@ -262,7 +263,8 @@ def build_smooth_body() -> Part.Shape:
 
     # 3. Bring back the 3 antenna holes on the thin section
     # Shifted left by 10mm (from 150.379 to 140.379) to maintain exact distance from LTE bosses
-    hole_zs = [12.70, 25.40, 38.10]
+    # Shifted up by 5mm for ground clearance (to match LTE bosses)
+    hole_zs = [12.70 + 5.0, 25.40 + 5.0, 38.10 + 5.0]
     holes_to_cut = []
     for z in hole_zs:
         holes_to_cut.append(
@@ -443,12 +445,20 @@ def build_smooth_body() -> Part.Shape:
 
 def save_exports(body: Part.Shape) -> None:
     EXPORT.mkdir(parents=True, exist_ok=True)
+    # Rotate the final body -90 deg around X so it defaults to Y-up
+    # This ensures all exported filetypes (FCStd, STEP, STL) natively sit on their bottom floor in GitHub/Three.js
+    import math
+    mat = App.Matrix()
+    mat.rotateX(math.radians(-90))
+    body.transformShape(mat)
+
     doc = App.newDocument("enclosure_body")
     obj = doc.addObject("Part::Feature", "Body")
     obj.Shape = body
     doc.recompute()
     doc.saveAs(str(EXPORT / "enclosure_body.FCStd"))
     body.exportStep(str(EXPORT / "enclosure_body.step"))
+    
     mesh = Mesh.Mesh()
     mesh.addFacets(body.tessellate(0.1))
     mesh.write(str(EXPORT / "enclosure_body.stl"))

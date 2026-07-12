@@ -1,9 +1,12 @@
 import FreeCAD as App
 import Part
 import Mesh
+import math
 
 b = Part.makeBox(10, 10, 10)
 m = Mesh.Mesh()
 m.addFacets(b.tessellate(0.1))
-m.rotate(0, 0, 0, 1, 0, 0, -90)
-print(f"Mesh points: {m.CountPoints}")
+mat = App.Matrix()
+mat.rotateX(math.radians(-90))
+m.transform(mat)
+print(m.BoundBox)

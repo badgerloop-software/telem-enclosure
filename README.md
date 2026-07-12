@@ -1,7 +1,8 @@
 # Telemetry Enclosure
 
-![Car 2 enclosure preview](exports/car-2/enclosure_preview.gif)
-
+<p align="center">
+  <img src="exports/car-2/enclosure_preview.gif?v=3" alt="Car 2 enclosure preview">
+</p>
 3D-printable enclosure for an airborne / ground-station telemetry stack:
 
 | Component | Notes |

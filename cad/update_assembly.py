@@ -25,10 +25,19 @@ def update_assembly(version: str = "car-2") -> None:
         raise FileNotFoundError(f"Missing body or lid STEP in {export}")
 
     body = Part.read(str(body_path))
-    lid = Part.read(str(lid_path))
-    body_h = body.BoundBox.ZMax
+    lid_raw = Part.read(str(lid_path))
+    
+    # Body is already rotated to Y-up by smooth_floor.py.
+    # Lid comes from car-1.5 which is Z-up, so we must rotate it to match!
+    import math
+    mat = App.Matrix()
+    mat.rotateX(math.radians(-90))
+    lid = lid_raw.copy()
+    lid.transformShape(mat)
+    
+    body_h = body.BoundBox.YMax
     lid_placed = lid.copy()
-    lid_placed.translate(App.Vector(0, 0, body_h))
+    lid_placed.translate(App.Vector(0, body_h, 0))
 
     asm = App.newDocument("telem_enclosure_assembly")
     body_a = asm.addObject("Part::Feature", "Body")
